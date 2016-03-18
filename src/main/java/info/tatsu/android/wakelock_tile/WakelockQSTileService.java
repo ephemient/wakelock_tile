@@ -1,21 +1,19 @@
 package info.tatsu.android.wakelock_tile;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.content.ComponentName;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Icon;
 import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
-
-import static android.os.PowerManager.SCREEN_DIM_WAKE_LOCK;
 
 public class WakelockQSTileService extends TileService
 {
     private static final String IS_ADDED_PREFERENCE = "isAdded";
 
     private SharedPreferences m_preferences;
-    private WakeLock m_wakelock;
     private Tile m_tile;
 
     @Override
@@ -52,20 +50,14 @@ public class WakelockQSTileService extends TileService
     @Override
     public void onStartListening()
     {
-        m_wakelock = ((App) getApplication()).newWakeLock();
         m_tile = getQsTile();
-        updateTile();
+        PowerManager.WakeLock wakelock = ((App) getApplication()).getWakeLock();
+        updateTile(wakelock);
     }
 
     @Override
     public void onStopListening()
     {
-        m_tile = null;
-        if (m_wakelock != null && m_wakelock.isHeld())
-        {
-            m_wakelock.release();
-        }
-        m_wakelock = null;
         m_tile = null;
     }
 
@@ -73,25 +65,36 @@ public class WakelockQSTileService extends TileService
     @SuppressLint("Wakelock")
     public void onClick()
     {
-        if (m_wakelock != null)
+        stopForeground(true);
+        PowerManager.WakeLock wakelock = ((App) getApplication()).getWakeLock();
+        if (wakelock != null)
         {
-            boolean isHeld = m_wakelock.isHeld();
+            boolean isHeld = wakelock.isHeld();
             if (isHeld)
             {
-                m_wakelock.release();
+                wakelock.release();
             }
             else
             {
-                m_wakelock.acquire();
+                startForeground(R.id.notification, new Notification.Builder(this)
+                        .setPriority(Notification.PRIORITY_LOW)
+                        .setCategory(Notification.CATEGORY_SERVICE)
+                        .setContentTitle(getString(R.string.qstile_active))
+                        .setContentText(getString(R.string.qstile_description))
+                        .setSmallIcon(Icon.createWithResource(this, R.drawable.wakelock))
+                        .setShowWhen(false)
+                        .setOngoing(true)
+                        .build());
+                wakelock.acquire();
             }
         }
-        updateTile();
+        updateTile(wakelock);
     }
 
-    private void updateTile() {
+    private void updateTile(PowerManager.WakeLock wakelock) {
         m_tile.setState(
-                m_wakelock == null ? Tile.STATE_UNAVAILABLE :
-                m_wakelock.isHeld() ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
+                wakelock == null ? Tile.STATE_UNAVAILABLE :
+                wakelock.isHeld() ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
         m_tile.updateTile();
     }
 }
