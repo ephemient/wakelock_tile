@@ -1,0 +1,30 @@
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.12'
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.5.0'
+    }
+}
+apply plugin: 'android'
+
+android {
+    compileSdkVersion 'android-N'
+    buildToolsVersion '24.0.0 rc2'
+
+    defaultConfig {
+        minSdkVersion 'N'
+        targetSdkVersion 'N'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt')
+        }
+    }
+}
