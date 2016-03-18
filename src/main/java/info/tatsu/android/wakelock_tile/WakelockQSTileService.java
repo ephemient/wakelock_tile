@@ -1,10 +1,8 @@
 package info.tatsu.android.wakelock_tile;
 
-import android.annotation.SuppressLint;
-import android.app.Notification;
 import android.content.ComponentName;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.drawable.Icon;
 import android.os.PowerManager;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
@@ -52,7 +50,7 @@ public class WakelockQSTileService extends TileService
     {
         m_tile = getQsTile();
         PowerManager.WakeLock wakelock = ((App) getApplication()).getWakeLock();
-        updateTile(wakelock);
+        updateTile(wakelock == null ? null : wakelock.isHeld());
     }
 
     @Override
@@ -62,39 +60,36 @@ public class WakelockQSTileService extends TileService
     }
 
     @Override
-    @SuppressLint("Wakelock")
     public void onClick()
     {
         stopForeground(true);
         PowerManager.WakeLock wakelock = ((App) getApplication()).getWakeLock();
-        if (wakelock != null)
+        if (wakelock == null)
         {
-            boolean isHeld = wakelock.isHeld();
-            if (isHeld)
-            {
-                wakelock.release();
-            }
-            else
-            {
-                startForeground(R.id.notification, new Notification.Builder(this)
-                        .setPriority(Notification.PRIORITY_LOW)
-                        .setCategory(Notification.CATEGORY_SERVICE)
-                        .setContentTitle(getString(R.string.qstile_active))
-                        .setContentText(getString(R.string.qstile_description))
-                        .setSmallIcon(Icon.createWithResource(this, R.drawable.wakelock))
-                        .setShowWhen(false)
-                        .setOngoing(true)
-                        .build());
-                wakelock.acquire();
-            }
+            updateTile(null);
         }
-        updateTile(wakelock);
+        else if (wakelock.isHeld())
+        {
+            Intent intent = new Intent(this, WakelockHolderService.class);
+            intent.addCategory(Intent.ACTION_RUN);
+            intent.putExtra(WakelockHolderService.WAKELOCK_EXTRA, false);
+            startService(intent);
+            updateTile(Boolean.FALSE);
+        }
+        else
+        {
+            Intent intent = new Intent(this, WakelockHolderService.class);
+            intent.addCategory(Intent.ACTION_RUN);
+            intent.putExtra(WakelockHolderService.WAKELOCK_EXTRA, true);
+            startService(intent);
+            updateTile(Boolean.TRUE);
+        }
     }
 
-    private void updateTile(PowerManager.WakeLock wakelock) {
+    private void updateTile(Boolean isHeld) {
         m_tile.setState(
-                wakelock == null ? Tile.STATE_UNAVAILABLE :
-                wakelock.isHeld() ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
+                isHeld == null ? Tile.STATE_UNAVAILABLE :
+                isHeld ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
         m_tile.updateTile();
     }
 }
