@@ -1,5 +1,6 @@
 package info.tatsu.android.wakelock_tile;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.SharedPreferences;
 import android.os.PowerManager;
@@ -76,6 +77,7 @@ public class WakelockQSTileService extends TileService
     }
 
     @Override
+    @SuppressLint("Wakelock")
     public void onClick()
     {
         if (m_wakelock != null)
