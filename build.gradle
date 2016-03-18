@@ -21,10 +21,20 @@ android {
         targetSdkVersion 'N'
     }
 
+    signingConfigs {
+        releaseSigning {
+            storeFile file("${System.properties['user.home']}/.android/debug.keystore")
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt')
+            signingConfig signingConfigs.releaseSigning
         }
     }
 }

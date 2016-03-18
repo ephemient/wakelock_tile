@@ -12,11 +12,9 @@ import static android.os.PowerManager.SCREEN_DIM_WAKE_LOCK;
 
 public class WakelockQSTileService extends TileService
 {
-    private static final String TAG = WakelockQSTileService.class.getName();
     private static final String IS_ADDED_PREFERENCE = "isAdded";
 
     private SharedPreferences m_preferences;
-    private PowerManager m_powerManager;
     private WakeLock m_wakelock;
     private Tile m_tile;
 
@@ -25,7 +23,6 @@ public class WakelockQSTileService extends TileService
     {
         super.onCreate();
         m_preferences = getSharedPreferences("QS", MODE_PRIVATE);
-        m_powerManager = (PowerManager) getSystemService(POWER_SERVICE);
         if (m_preferences.getBoolean(IS_ADDED_PREFERENCE, false))
         {
             requestListeningState(this, new ComponentName(this, getClass()));
@@ -34,7 +31,6 @@ public class WakelockQSTileService extends TileService
 
     @Override
     public void onDestroy() {
-        m_powerManager = null;
         m_preferences = null;
         super.onDestroy();
     }
@@ -56,10 +52,7 @@ public class WakelockQSTileService extends TileService
     @Override
     public void onStartListening()
     {
-        if (m_powerManager.isWakeLockLevelSupported(SCREEN_DIM_WAKE_LOCK))
-        {
-            m_wakelock = m_powerManager.newWakeLock(SCREEN_DIM_WAKE_LOCK, TAG);
-        }
+        m_wakelock = ((App) getApplication()).newWakeLock();
         m_tile = getQsTile();
         updateTile();
     }
