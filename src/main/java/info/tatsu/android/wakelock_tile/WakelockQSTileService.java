@@ -32,11 +32,10 @@ public class WakelockQSTileService extends TileService
     }
 
     @Override
-    public int onTileAdded()
+    public void onTileAdded()
     {
         m_preferences.edit().putBoolean(IS_ADDED_PREFERENCE, true).apply();
         requestListeningState(this, new ComponentName(this, getClass()));
-        return TILE_MODE_ACTIVE;
     }
 
     @Override
